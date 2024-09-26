@@ -12,7 +12,7 @@ def load_device_data(filename):
 
 def main() -> None:  # Main function
     device_loader = LoadData()
-    devices = load_device_data('venv/devices.json')
+    devices = device_loader.load_device_data('devices.json')
 
     while True:  #loop to keep showing the menu until the user exits
         print("""
@@ -53,7 +53,7 @@ def main() -> None:  # Main function
 
         elif choice == '2':
             print("Exiting application...")
-            break  # Exit the while loop, terminating the program
+            exit()  # Exit the while loop, terminating the program
 
         else:
             print("Invalid option. Please try again.")
@@ -61,7 +61,6 @@ def main() -> None:  # Main function
 
 def RouterConfigurationMenu(device) -> None:  # Configuration menu for routers.
     router_instance = Router(device['hostname'], device['ip_address'], device['username'], device['password'], device['exec_password'])
-    device_instance = Device(device['hostname'], device['ip_address'], device['username'], device['password'], device['exec_password'])
 
     while True:
         print("""
@@ -75,16 +74,17 @@ def RouterConfigurationMenu(device) -> None:  # Configuration menu for routers.
         config_choice = input("Enter your choice: ")
 
         if config_choice == '1':
-            router_instance.config_HSRP()
+            router_instance.config_hsrp()
             break  # Exit the loop after valid selection
         elif config_choice == '2':
-            router_instance.setup_DHCP(device['ip_address'])
+            router_instance.setup_dhcp(device['ip_address'])
             break
         elif config_choice == '3':
             router_instance.config_ripv2()
             break
         elif config_choice == '4':
-            Device.ping()
+            device_instance = Device(device['hostname'], device['ip_address'], device['username'], device['password'], device['exec_password'])
+            device_instance.ping()
             break
         elif config_choice == '5':
             main()
@@ -94,7 +94,6 @@ def RouterConfigurationMenu(device) -> None:  # Configuration menu for routers.
 
 def SwitchConfigurationMenu(device) -> None:  # Configuration menu for switches.
     switch_instance = Switch(device['hostname'], device['ip_address'], device['username'], device['password'], device['exec_password'])
-    device_instance = Device(device['hostname'], device['ip_address'], device['username'], device['password'], device['exec_password'])
 
     while True:
         print("""
@@ -102,32 +101,25 @@ def SwitchConfigurationMenu(device) -> None:  # Configuration menu for switches.
         1. Configure a Vlan.
         2. Configure Security.
         3. Configure STP.
-        4. Configure HSRP (for multilayer switches only).
-        5. Ping another device.
-        6. Disconnect from the device and return to Main Menu.
+        4. Ping another device.
+        5. Disconnect from the device and return to Main Menu.
         """)
         config_choice = input("Enter your choice: ")
 
         if config_choice == '1':
-            switch_instance.config_Vlan()
+            switch_instance.config_vlan()
             break  # Exit the loop after valid selection
         elif config_choice == '2':
-            switch_instance.config_Security()
+            switch_instance.config_security()
             break
         elif config_choice == '3':
-            switch_instance.config_STP()
+            switch_instance.config_stp()
             break
         elif config_choice == '4':
-            if "multilayer" not in device['hostname'].lower():
-                print("This is not a multilayer switch, as such it can not act as a router.")
-                #Restricts the HSRP configuration, allows it only if the sw is multilayer
-            else:
-                switch_instance.config_HSRP()
-            break
-        elif config_choice == '5':
+            device_instance = Device(device['hostname'], device['ip_address'], device['username'], device['password'], device['exec_password'])
             device_instance.ping()
             break
-        elif config_choice == '6':
+        elif config_choice == '5':
             main()
             break
         else:

@@ -1,4 +1,3 @@
-import paramiko.ssh_exception
 from Connection import Connection
 
 class Device:
@@ -10,36 +9,19 @@ class Device:
         self.exec_pass = exec_pass
         self.connection = Connection(ip_address, username, password)
 
-    def ping(self) -> None: #shared method (routers AND switches) for pinging another device
-        print("check")
+    def ping(self) -> None:  # shared method (routers AND switches) for pinging another device
+        print("check ping meth")
         self.connection.connect(self.exec_pass)
         destination_ip = input("Enter the destination IP address: ")
 
-        if self.connection.shell is None:
-            print("Establishing a new shell session...")
-            self.connection.shel = self.connection.client.invoke_shell()
+        stdout, stderr = self.connection.send_command(f'do ping {destination_ip}')
+        self.connection.shell.settimeout(5)
 
-        self.connection.shell.send(f'do ping {destination_ip}\n')
 
-        output = ""
-        self.connection.shell.settimeout(3)
-
-        while True:
-            try:
-                part = self.connection.shell.recv(1024).decode('utf-8')
-                output += part
-                if len(part) == 0:
-                    break
-            except paramiko.ssh_exception.SSHException:
-                break
-
-        if "Reply from" in output:  # Adjust this string as necessary based on actual output
+        if "3/5" in stdout or "4/5" in stdout or "5/5" in stdout:
             print("Ping successful!")
-            return True
         else:
             print("Ping failed.")
-            return False
 
-        self.connection.disconnect() #disconnect from the device
-
+        self.connection.close()  # close shell session
 
